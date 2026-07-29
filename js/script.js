@@ -65,12 +65,9 @@
         subtitle: "Have a question about our products, bulk orders, or partnerships? Reach out — we'd love to hear from you.",
         formName: 'Your Name', formPhone: 'Phone Number', formProduct: 'Product of Interest', formMessage: 'Message',
         formSubmit: 'Send Enquiry',
+        formSending: 'Sending…',
+        formError: "Something went wrong sending your enquiry. Please try again, or call us directly.",
         formThanks: "Thank you! We've received your enquiry and will get back to you shortly.",
-        phoneTitle: 'Call Us',
-        people: [
-          { name: 'Sriman Narayana Bikkumalla', phone: '98485 76711', tel: 'tel:9848576711' },
-          { name: 'Sai Krishna Bikkumalla', phone: '89193 32393', tel: 'tel:8919332393' },
-        ],
         addressTitle: 'Visit Us',
         address: 'Keshampet Road, Shadnagar, 509216, Telangana',
         directions: 'Get Directions',
@@ -144,12 +141,9 @@
         subtitle: 'మా ఉత్పత్తులు, పెద్దమొత్తంలో ఆర్డర్లు లేదా భాగస్వామ్యాల గురించి ప్రశ్నలు ఉన్నాయా? మమ్మల్ని సంప్రదించండి.',
         formName: 'మీ పేరు', formPhone: 'ఫోన్ నంబర్', formProduct: 'మీకు కావాల్సిన ఉత్పత్తి', formMessage: 'సందేశం',
         formSubmit: 'విచారణ పంపండి',
+        formSending: 'పంపుతోంది…',
+        formError: 'మీ విచారణ పంపడంలో సమస్య ఏర్పడింది. దయచేసి మళ్లీ ప్రయత్నించండి లేదా నేరుగా కాల్ చేయండి.',
         formThanks: 'ధన్యవాదాలు! మీ విచారణ అందింది, త్వరలో మిమ్మల్ని సంప్రదిస్తాము.',
-        phoneTitle: 'మాకు కాల్ చేయండి',
-        people: [
-          { name: 'శ్రీమాన్ నారాయణ బిక్కుమళ్ల', phone: '98485 76711', tel: 'tel:9848576711' },
-          { name: 'సాయి కృష్ణ బిక్కుమళ్ల', phone: '89193 32393', tel: 'tel:8919332393' },
-        ],
         addressTitle: 'మమ్మల్ని సందర్శించండి',
         address: 'కేశంపేట రోడ్డు, షాద్‌నగర్, 509216, తెలంగాణ',
         directions: 'దారి చూపండి',
@@ -163,7 +157,41 @@
   };
 
   var HERO_SLIDE_LABELS = ['mill exterior photo', 'rice fields photo', 'rice grains close-up', 'packaging photo'];
-  var MAPS_URL = 'https://www.google.com/maps/search/?api=1&query=Keshampet+Road,+Shadnagar,+509216,+Telangana';
+  var HERO_SLIDE_PHOTOS = {
+    'rice fields photo': 'assets/hero/rice-fields.jpg',
+    'rice grains close-up': 'assets/hero/rice-grains-closeup.jpg',
+  };
+  function heroSlidePhotoHtml(label) {
+    var src = HERO_SLIDE_PHOTOS[label];
+    return src
+      ? '<img src="' + esc(src) + '" alt="' + esc(label) + '" />'
+      : '<span>' + esc(label) + '</span>';
+  }
+  var PRODUCT_PHOTOS = {
+    'rice grains': 'assets/products/rice.jpg',
+    'broken rice': 'assets/products/broken-rice.jpg',
+    'paddy husk': 'assets/products/paddy-husk.jpg',
+    'rice bran': 'assets/products/rice-bran.jpg',
+    'cattle feed': 'assets/products/cattle-feed.jpg',
+  };
+  function productPhotoHtml(photoLabel) {
+    var src = PRODUCT_PHOTOS[photoLabel];
+    return src
+      ? '<img src="' + esc(src) + '" alt="' + esc(photoLabel) + '" />'
+      : '<span>[ ' + esc(photoLabel) + ' ]</span>';
+  }
+
+  var BRAND_LOGOS = {
+    'Gajraj Evergreen HMT Rice': 'assets/brands/gajraj-evergreen-hmt-rice.png',
+    'No.1 Kurnool Special': 'assets/brands/no1-kurnool-special.png',
+    'Bell Brand': 'assets/brands/bell-brand.png',
+    'Cycle Brand': 'assets/brands/cycle-brand.png',
+    'Tomato Gold': 'assets/brands/tomato-gold.png',
+    'Pure Basmati Rice': 'assets/brands/pure-basmati-rice.png',
+    'Amulya Finest Selection': 'assets/brands/amulya-finest-selection.png',
+    '999 Gold Premium': 'assets/brands/999-gold-premium.png',
+  };
+  var MAPS_URL = 'https://maps.app.goo.gl/NQKFHwH1muMtLy7t6';
 
   var SERVE_ICON_CLASSES = ['icon-store', 'icon-warehouse', 'icon-cart', 'icon-ring', 'icon-hotel', 'icon-caterer', 'icon-institution', 'icon-corporate'];
   var SERVE_ICON_HTML = [
@@ -182,8 +210,12 @@
     lang: 'en',
     form: { name: '', phone: '', product: 'Rice', message: '' },
     formSubmitted: false,
+    formSubmitting: false,
+    formError: false,
     heroSlideIndex: 0,
+    logoModalOpen: false,
   };
+  var CONTACT_EMAIL = 'saikrishnabikkumala@gmail.com';
 
   function esc(s) {
     return String(s).replace(/[&<>"']/g, function (c) {
@@ -200,7 +232,7 @@
     }
     return (
       '<div class="navbar">' +
-        '<img src="assets/logo-full.png" alt="Sri Venkata Krishna Modern Ricemill" class="navbar-logo" data-action="goto" data-value="home" />' +
+        '<img src="assets/logo-full.png" alt="Sri Venkata Krishna Modern Ricemill" class="navbar-logo" data-action="open-logo-modal" />' +
         '<div class="nav-right">' +
           link('home', c.nav.home) +
           link('about', c.nav.about) +
@@ -217,7 +249,7 @@
 
   function renderHero(c) {
     var slides = HERO_SLIDE_LABELS.map(function (label, i) {
-      return '<div class="hero-slide' + (i === state.heroSlideIndex ? ' active' : '') + '"><span>' + esc(label) + '</span></div>';
+      return '<div class="hero-slide' + (i === state.heroSlideIndex ? ' active' : '') + '">' + heroSlidePhotoHtml(label) + '</div>';
     }).join('');
     var dots = HERO_SLIDE_LABELS.map(function (_, i) {
       return '<span class="hero-dot' + (i === state.heroSlideIndex ? ' active' : '') + '"></span>';
@@ -252,7 +284,7 @@
     var productMini = c.products.items.map(function (p) {
       return (
         '<div class="product-mini-card">' +
-          '<div class="product-mini-photo"><span>[ ' + esc(p.photoLabel) + ' ]</span></div>' +
+          '<div class="product-mini-photo">' + productPhotoHtml(p.photoLabel) + '</div>' +
           '<div class="product-mini-name">' + esc(p.name) + '</div>' +
         '</div>'
       );
@@ -337,7 +369,7 @@
     var cards = c.products.items.map(function (p) {
       return (
         '<div class="product-card">' +
-          '<div class="product-card-photo"><span>[ ' + esc(p.photoLabel) + ' ]</span></div>' +
+          '<div class="product-card-photo">' + productPhotoHtml(p.photoLabel) + '</div>' +
           '<div class="product-card-body">' +
             '<div class="product-card-name">' + esc(p.name) + '</div>' +
             '<div class="product-card-desc">' + esc(p.desc) + '</div>' +
@@ -347,9 +379,13 @@
     }).join('');
 
     function brandItem(b) {
+      var logo = BRAND_LOGOS[b];
+      var logoHtml = logo
+        ? '<img src="' + esc(logo) + '" alt="' + esc(b) + '" />'
+        : '<span>[ logo ]</span>';
       return (
         '<div class="brand-item">' +
-          '<div class="brand-logo"><span>[ logo ]</span></div>' +
+          '<div class="brand-logo">' + logoHtml + '</div>' +
           '<span class="brand-name">' + esc(b) + '</span>' +
         '</div>'
       );
@@ -420,24 +456,18 @@
           '</div>' +
           '<div class="form-group">' +
             '<div class="form-label">' + esc(c.contact.formProduct) + '</div>' +
-            '<select class="form-select" id="field-product">' + productOptions + '</select>' +
+            '<select class="form-select" id="field-product" required>' + productOptions + '</select>' +
           '</div>' +
           '<div class="form-group">' +
             '<div class="form-label">' + esc(c.contact.formMessage) + '</div>' +
-            '<textarea class="form-textarea" id="field-message" rows="4">' + esc(state.form.message) + '</textarea>' +
+            '<textarea class="form-textarea" id="field-message" rows="4" required>' + esc(state.form.message) + '</textarea>' +
           '</div>' +
-          '<button type="submit" class="form-submit">' + esc(c.contact.formSubmit) + '</button>' +
+          (state.formError ? '<div class="form-error">' + esc(c.contact.formError) + '</div>' : '') +
+          '<button type="submit" class="form-submit" ' + (state.formSubmitting ? 'disabled' : '') + '>' +
+            (state.formSubmitting ? esc(c.contact.formSending) : esc(c.contact.formSubmit)) +
+          '</button>' +
         '</form>';
     }
-
-    var people = c.contact.people.map(function (p) {
-      return (
-        '<div class="call-person">' +
-          '<div class="call-person-name">' + esc(p.name) + '</div>' +
-          '<a class="call-person-phone" href="' + esc(p.tel) + '">' + esc(p.phone) + '</a>' +
-        '</div>'
-      );
-    }).join('');
 
     return (
       '<div class="header-band">' +
@@ -447,10 +477,6 @@
       '<div class="contact-grid">' +
         '<div class="contact-form-card">' + formBlock + '</div>' +
         '<div class="contact-side">' +
-          '<div class="call-card">' +
-            '<div class="call-card-title">' + esc(c.contact.phoneTitle) + '</div>' +
-            people +
-          '</div>' +
           '<div class="address-card">' +
             '<div class="address-card-title">' + esc(c.contact.addressTitle) + '</div>' +
             '<div class="address-text">' + esc(c.contact.address) + '</div>' +
@@ -480,11 +506,9 @@
             '</div>' +
           '</div>' +
           '<div>' +
-            '<div class="footer-col-title">' + esc(c.contact.phoneTitle) + '</div>' +
+            '<div class="footer-col-title">' + esc(c.contact.addressTitle) + '</div>' +
             '<div class="footer-contact-lines">' +
-              '<div>' + esc(c.contact.people[0].phone) + '</div>' +
-              '<div>' + esc(c.contact.people[1].phone) + '</div>' +
-              '<div style="margin-top:10px;">' + esc(c.contact.address) + '</div>' +
+              '<div>' + esc(c.contact.address) + '</div>' +
             '</div>' +
           '</div>' +
         '</div>' +
@@ -508,6 +532,12 @@
         renderNav() +
         '<div>' + pageHtml + '</div>' +
         renderFooter(c) +
+      '</div>' +
+      '<div class="logo-modal-overlay' + (state.logoModalOpen ? ' active' : '') + '" data-action="close-logo-modal">' +
+        '<div class="logo-modal-circle" data-action="noop">' +
+          '<button type="button" class="logo-modal-close" data-action="close-logo-modal" aria-label="Close">&times;</button>' +
+          '<img src="assets/logo-mark.png" alt="' + esc(c.brandName) + '" />' +
+        '</div>' +
       '</div>';
   }
 
@@ -524,9 +554,37 @@
     if (formEl) {
       formEl.addEventListener('submit', function (e) {
         e.preventDefault();
-        state.formSubmitted = true;
+        state.formSubmitting = true;
+        state.formError = false;
         render();
         bindFormEvents();
+
+        fetch('https://formsubmit.co/ajax/' + CONTACT_EMAIL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+          body: JSON.stringify({
+            name: state.form.name,
+            phone: state.form.phone,
+            product: state.form.product,
+            message: state.form.message,
+            _subject: 'New enquiry from ' + CONTENT.en.brandName + ' website',
+            _template: 'table',
+            _captcha: 'false',
+          }),
+        })
+          .then(function (res) {
+            if (!res.ok) throw new Error('Request failed');
+            state.formSubmitting = false;
+            state.formSubmitted = true;
+            render();
+            bindFormEvents();
+          })
+          .catch(function () {
+            state.formSubmitting = false;
+            state.formError = true;
+            render();
+            bindFormEvents();
+          });
       });
     }
   }
@@ -568,9 +626,27 @@
       if (state.page === 'contact') bindFormEvents();
     } else if (action === 'reset-form') {
       state.formSubmitted = false;
+      state.formError = false;
+      state.formSubmitting = false;
       state.form = { name: '', phone: '', product: 'Rice', message: '' };
       render();
       bindFormEvents();
+    } else if (action === 'open-logo-modal') {
+      state.logoModalOpen = true;
+      render();
+      if (state.page === 'contact') bindFormEvents();
+    } else if (action === 'close-logo-modal') {
+      state.logoModalOpen = false;
+      render();
+      if (state.page === 'contact') bindFormEvents();
+    }
+  });
+
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && state.logoModalOpen) {
+      state.logoModalOpen = false;
+      render();
+      if (state.page === 'contact') bindFormEvents();
     }
   });
 
