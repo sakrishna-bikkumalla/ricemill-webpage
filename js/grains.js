@@ -24,11 +24,11 @@
   var SEED = 20250901;
 
   /* TUNING ----------------------------------------------------------------
-   * The artboard's 70 grains are scaled for a ~1500px viewport. Dropped onto
-   * a 375px phone that same count reads as clutter (roughly 4x the grains per
-   * horizontal pixel) and costs 140 image layers of work every scroll frame.
-   * So count and size both scale down with the viewport, on the breakpoints
-   * the stylesheet already uses. Above 900px nothing changes.
+   * Count and size are tuned per breakpoint, on the same widths the
+   * stylesheet already uses. Above 900px nothing changes from the artboard.
+   * Size always scales down with the viewport (see grainScaleFor); count is
+   * a separate judgement call, because once the grains are small enough a
+   * denser field reads as texture rather than clutter.
    */
   var TABLET_MAX = 900;
   var PHONE_MAX = 520;
@@ -36,7 +36,7 @@
   function grainCountFor(w) {
     if (w > TABLET_MAX) return 70; // desktop — the design's own value
     if (w > PHONE_MAX) return 42;
-    return 22;
+    return 90; // phone — dense field of small grains
   }
 
   // Grain height has to stay in proportion to viewport width, not to itself.
