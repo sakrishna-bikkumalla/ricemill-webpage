@@ -109,12 +109,29 @@ button { font-family: inherit; }
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  padding: 14px 44px;
+  padding: 9px 44px;
+  /* Solid fallback: without backdrop-filter a translucent bar would leave
+     dark nav text sitting straight on the hero, so those browsers keep this. */
   background: var(--bg);
   border-bottom: 1px solid var(--border);
 }
 
-.navbar-logo { height: 69px; cursor: pointer; }
+/* Frosted glass. The alpha stays high (0.82) on purpose. The dark green hero
+   and the near-black footer both scroll under this bar; composited over the
+   hero, 0.82 leaves the muted nav links at roughly 4.9:1, which clears AA for
+   14px text. Dropping it to 0.78 for a glassier look falls to about 4.5:1 and
+   fails. Thin it further only if the link colour is darkened to match. */
+@supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .navbar {
+    background: rgba(250, 246, 236, 0.82);
+    -webkit-backdrop-filter: blur(16px) saturate(150%);
+    backdrop-filter: blur(16px) saturate(150%);
+    border-bottom: 1px solid rgba(30, 61, 40, 0.09);
+  }
+}
+
+/* The logo sets the bar's height, so it is the lever for how tall the bar is. */
+.navbar-logo { height: 50px; cursor: pointer; }
 
 .nav-right {
   display: flex;
@@ -904,7 +921,9 @@ button { font-family: inherit; }
 
 /* ===== RESPONSIVE ===== */
 @media (max-width: 900px) {
-  .navbar { padding: 12px 20px; }
+  .navbar { padding: 8px 20px; }
+  /* The bar wraps to two rows here, so the logo costs double — keep it small. */
+  .navbar-logo { height: 42px; }
   .section-pad, .header-band, .hero, .trust-grid, .about-teaser, .products-teaser,
   .cta-banner, .about-story-section, .founders-section, .values-section,
   .serve-section, .products-page-grid, .brands-section, .packaging-section, .contact-grid {
@@ -920,7 +939,11 @@ button { font-family: inherit; }
 }
 
 @media (max-width: 520px) {
-  .nav-right { gap: 16px; }
+  /* Four links plus the language toggle need 377px at a 16px gap but only get
+     350px, so the toggle used to wrap onto a third row and the bar ran 147px
+     tall. Tightening the gap fits them on one row. */
+  .nav-right { gap: 10px; }
+  .lang-toggle { margin-left: 0; }
   .nav-link { font-size: 12px; }
   .hero-title { font-size: 28px; }
   .hero-ctas { flex-direction: column; }
