@@ -36,7 +36,7 @@
   function grainCountFor(w) {
     if (w > TABLET_MAX) return 70; // desktop — the design's own value
     if (w > PHONE_MAX) return 42;
-    return 90; // phone — dense field of small grains
+    return 70; // phone — desktop's count, at 0.45x size
   }
 
   // Grain height has to stay in proportion to viewport width, not to itself.
