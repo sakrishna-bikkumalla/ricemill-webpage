@@ -256,20 +256,47 @@ button { font-family: inherit; }
 .hero-slide img { width: 100%; height: 100%; object-fit: cover; }
 .hero-dots {
   position: absolute;
-  bottom: 14px;
+  bottom: 8px;
   left: 0;
   right: 0;
   display: flex;
   justify-content: center;
-  gap: 8px;
+  gap: 0;
+  z-index: 3;
 }
+/* The button is a 24px tap target; the visible dot is the ::before inside it,
+   so touch users get something they can actually hit. */
 .hero-dot {
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  -webkit-tap-highlight-color: transparent;
+}
+.hero-dot::before {
+  content: '';
   width: 7px;
   height: 7px;
   border-radius: 50%;
-  background: rgba(250,246,236,0.4);
+  background: rgba(250, 246, 236, 0.4);
+  transition: background 0.2s ease, transform 0.2s ease;
 }
-.hero-dot.active { background: var(--gold); }
+.hero-dot:hover::before { background: rgba(250, 246, 236, 0.75); }
+.hero-dot.active::before,
+.hero-dot.active:hover::before {
+  background: var(--gold);
+  transform: scale(1.25);
+}
+.hero-dot:focus-visible {
+  outline: 2px solid var(--gold-light);
+  outline-offset: -2px;
+  border-radius: 50%;
+}
 
 /* ===== TRUST ===== */
 .trust-grid {
@@ -541,6 +568,20 @@ button { font-family: inherit; }
 .marquee-rtl { animation: marqueeRTL 26s linear infinite; }
 @keyframes marqueeLTR { from { transform: translateX(-50%); } to { transform: translateX(0); } }
 @keyframes marqueeRTL { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+
+/* Hold the row still so a brand can actually be read once it catches the eye.
+   focus-within covers keyboard users tabbing through the logos. */
+.marquee-mask:hover .marquee-track,
+.marquee-mask:focus-within .marquee-track {
+  animation-play-state: paused;
+}
+
+/* No auto-scroll for anyone who asked not to see motion — the row becomes a
+   plain horizontally scrollable strip instead, so every brand stays reachable. */
+@media (prefers-reduced-motion: reduce) {
+  .marquee-ltr, .marquee-rtl { animation: none; }
+  .marquee-mask { overflow-x: auto; }
+}
 .brand-item { display: flex; flex-direction: column; align-items: center; gap: 10px; flex-shrink: 0; width: 168px; }
 .brand-logo {
   width: 83px; height: 83px;

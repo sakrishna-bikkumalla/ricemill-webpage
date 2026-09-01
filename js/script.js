@@ -11,6 +11,7 @@
         subtitle: 'Four decades of family tradition, modern milling, and uncompromising quality — from our mill in Shadnagar to your table.',
         cta1: 'Explore Products',
         cta2: 'Get in Touch',
+        slide: 'Show slide',
       },
       trust: [
         { mark: '40+', title: 'Since 1981', desc: '40+ years of milling experience.' },
@@ -87,6 +88,7 @@
         subtitle: 'షాద్‌నగర్‌లోని మా మిల్లు నుండి మీ ఇంటి వరకు — నాలుగు దశాబ్దాల కుటుంబ సంప్రదాయం, ఆధునిక మిల్లింగ్, రాజీలేని నాణ్యత.',
         cta1: 'ఉత్పత్తులు చూడండి',
         cta2: 'సంప్రదించండి',
+        slide: 'స్లైడ్ చూపించు',
       },
       trust: [
         { mark: '40+', title: '1981 నుండి', desc: '40+ సంవత్సరాల మిల్లింగ్ అనుభవం.' },
@@ -213,6 +215,7 @@
     formSubmitting: false,
     formError: false,
     heroSlideIndex: 0,
+    heroTimer: null,
     logoModalOpen: false,
   };
   var CONTACT_EMAIL = 'saikrishnabikkumala@gmail.com';
@@ -252,7 +255,13 @@
       return '<div class="hero-slide' + (i === state.heroSlideIndex ? ' active' : '') + '">' + heroSlidePhotoHtml(label) + '</div>';
     }).join('');
     var dots = HERO_SLIDE_LABELS.map(function (_, i) {
-      return '<span class="hero-dot' + (i === state.heroSlideIndex ? ' active' : '') + '"></span>';
+      var on = i === state.heroSlideIndex;
+      return (
+        '<button type="button" class="hero-dot' + (on ? ' active' : '') + '"' +
+          ' data-action="hero-slide" data-value="' + i + '"' +
+          ' aria-label="' + esc(c.hero.slide) + ' ' + (i + 1) + '"' +
+          ' aria-current="' + (on ? 'true' : 'false') + '"></button>'
+      );
     }).join('');
     return (
       '<div class="hero">' +
@@ -655,6 +664,9 @@
       state.form = { name: '', phone: '', product: 'Rice', message: '' };
       render();
       bindFormEvents();
+    } else if (action === 'hero-slide') {
+      showHeroSlide(parseInt(value, 10));
+      startHeroTimer();
     } else if (action === 'open-logo-modal') {
       state.logoModalOpen = true;
       render();
@@ -674,18 +686,31 @@
     }
   });
 
-  setInterval(function () {
-    state.heroSlideIndex = (state.heroSlideIndex + 1) % HERO_SLIDE_LABELS.length;
-    if (state.page === 'home') {
-      var visual = document.querySelector('.hero-visual');
-      if (visual) {
-        var slides = visual.querySelectorAll('.hero-slide');
-        var dots = visual.querySelectorAll('.hero-dot');
-        slides.forEach(function (s, i) { s.classList.toggle('active', i === state.heroSlideIndex); });
-        dots.forEach(function (d, i) { d.classList.toggle('active', i === state.heroSlideIndex); });
-      }
-    }
-  }, 5000);
+  // Slides are swapped by toggling classes rather than re-rendering, so the
+  // page (and the grain layer) is left alone while the hero cycles.
+  function showHeroSlide(i) {
+    state.heroSlideIndex = i;
+    var visual = document.querySelector('.hero-visual');
+    if (!visual) return;
+    var slides = visual.querySelectorAll('.hero-slide');
+    var dots = visual.querySelectorAll('.hero-dot');
+    slides.forEach(function (s, k) { s.classList.toggle('active', k === i); });
+    dots.forEach(function (d, k) {
+      d.classList.toggle('active', k === i);
+      d.setAttribute('aria-current', k === i ? 'true' : 'false');
+    });
+  }
+
+  // Restarted on manual selection, so picking a dot gives you a full interval
+  // to look at that slide instead of it advancing a moment later.
+  function startHeroTimer() {
+    clearInterval(state.heroTimer);
+    state.heroTimer = setInterval(function () {
+      showHeroSlide((state.heroSlideIndex + 1) % HERO_SLIDE_LABELS.length);
+    }, 5000);
+  }
+
+  startHeroTimer();
 
   applyHash(true);
 
