@@ -517,6 +517,25 @@
     );
   }
 
+  // The logo mark rebuilt from ten cut-out parts so it can grow on screen.
+  // This is paint order, back to front; the growth stagger lives in the CSS.
+  var LOGO_PARTS = [
+    'stem', 'leaf-l', 'leaf-r', 'blade-l', 'blade-r',
+    'grain-l2', 'grain-r2', 'grain-l1', 'grain-r1', 'grain-top',
+  ];
+
+  function renderLogoAnim(c) {
+    var parts = LOGO_PARTS.map(function (name) {
+      return '<img src="assets/logo-parts/' + name + '.png" alt="" class="lp-' + name + '" />';
+    }).join('');
+    return (
+      '<div class="logo-anim" role="img" aria-label="' + esc(c.brandName) + '">' +
+        '<div class="logo-anim-plant">' + parts + '</div>' +
+        '<div class="logo-anim-soil"></div>' +
+      '</div>'
+    );
+  }
+
   function render() {
     var c = t();
     document.documentElement.lang = state.lang === 'te' ? 'te' : 'en';
@@ -536,7 +555,9 @@
       '<div class="logo-modal-overlay' + (state.logoModalOpen ? ' active' : '') + '" data-action="close-logo-modal">' +
         '<div class="logo-modal-circle" data-action="noop">' +
           '<button type="button" class="logo-modal-close" data-action="close-logo-modal" aria-label="Close">&times;</button>' +
-          '<img src="assets/logo-mark.png" alt="' + esc(c.brandName) + '" />' +
+          // Built only while open: keeps the ten part images off every other
+          // page view, and guarantees the growth restarts on each open.
+          (state.logoModalOpen ? renderLogoAnim(c) : '') +
         '</div>' +
       '</div>';
 
