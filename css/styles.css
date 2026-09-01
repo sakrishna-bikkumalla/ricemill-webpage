@@ -35,6 +35,60 @@ input::placeholder, textarea::placeholder { color: #9a978c; }
 
 button { font-family: inherit; }
 
+/* ===== GRAIN ANIMATION LAYER ===== */
+/* Fixed layer of drifting paddy/rice sprites. It sits above each section's
+   background (z-index 1) but below its content (z-index 2), so grains float
+   over the colour fields without ever obscuring text. Driven by js/grains.js. */
+.grain-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  overflow: hidden;
+  contain: strict;
+  opacity: 0;
+  visibility: hidden;
+}
+.grain {
+  position: absolute;
+  left: 0;
+  top: 0;
+  will-change: transform, filter;
+  filter: brightness(1.1) saturate(1.06);
+}
+.grain img {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+}
+.grain-rice { opacity: 0; }
+.grain-husk {
+  position: absolute;
+  left: 26%;
+  top: 34%;
+  width: 44%;
+  height: 30%;
+  border-radius: 60% 60% 50% 50%;
+  background: linear-gradient(150deg, #e2c176, #a97b2c);
+  opacity: 0;
+}
+
+/* Lift section content above the grain layer. */
+.hero > div,
+.trust-grid > div,
+.about-teaser > *,
+.products-teaser > *,
+.cta-banner > * {
+  position: relative;
+  z-index: 2;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .grain { transition: none !important; }
+}
+
 /* ===== NAV ===== */
 .navbar {
   position: sticky;
@@ -226,8 +280,21 @@ button { font-family: inherit; }
   gap: 60px;
   align-items: center;
   padding: 80px 60px;
-  background: #ffffff;
+  background: var(--gold);
 }
+
+/* Copy on the gold band is darkened for contrast. */
+.about-teaser .eyebrow { color: var(--green-dark); }
+.about-teaser .about-teaser-text { color: #22301f; }
+.about-teaser .link-cta {
+  color: var(--green-dark);
+  border-bottom-color: var(--green);
+}
+.about-teaser .placeholder-photo {
+  background: repeating-linear-gradient(45deg, #a87f2b, #a87f2b 12px, #bf9339 12px, #bf9339 24px);
+  border-color: rgba(30, 61, 40, 0.22);
+}
+.about-teaser .placeholder-photo span { color: var(--green); }
 .eyebrow {
   font-family: 'Poppins', sans-serif;
   font-weight: 600;

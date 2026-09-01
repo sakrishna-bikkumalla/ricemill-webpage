@@ -539,6 +539,9 @@
           '<img src="assets/logo-mark.png" alt="' + esc(c.brandName) + '" />' +
         '</div>' +
       '</div>';
+
+    // The grain layer keys its fade to elements that were just rebuilt.
+    if (window.RiceGrains) window.RiceGrains.refresh();
   }
 
   function bindFormEvents() {
@@ -664,4 +667,6 @@
   }, 5000);
 
   applyHash(true);
+
+  if (window.RiceGrains) window.RiceGrains.init();
 })();
