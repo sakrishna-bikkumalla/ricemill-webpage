@@ -39,10 +39,14 @@
     return 22;
   }
 
+  // Grain height has to stay in proportion to viewport width, not to itself.
+  // Desktop's largest grain is 48px on ~1500px — about 3% of the width. Left
+  // unscaled on a 390px phone that same grain covers nearly 13% and competes
+  // with the headline, so it is scaled back toward the desktop ratio.
   function grainScaleFor(w) {
     if (w > TABLET_MAX) return 1; // desktop — the design's own sizing
-    if (w > PHONE_MAX) return 0.85;
-    return 0.7;
+    if (w > PHONE_MAX) return 0.65;
+    return 0.45;
   }
 
   // Seeded PRNG so the scatter is identical on every load.
