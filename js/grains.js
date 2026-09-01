@@ -5,9 +5,11 @@
  * section's background but below its text (see the z-index rules in
  * styles.css). As a grain descends past the middle of the hero it peels:
  * the paddy image cross-fades into milled rice and the husk spins away.
- * The whole layer is faded out before the story section arrives.
+ * The whole layer is faded out before the products teaser arrives.
  *
  * Ported from the Claude Design artboard "Paddy to rice animation".
+ * Desktop (> 900px) reproduces that artboard exactly; narrower viewports
+ * get a lighter version of the same effect — see TUNING below.
  */
 (function () {
   'use strict';
@@ -18,9 +20,30 @@
     { paddy: 'assets/grains/paddy-3.png', rice: 'assets/grains/rice-3.png', ar: 35 / 61 },
   ];
 
-  var GRAIN_COUNT = 70;
   var GRAIN_OPACITY = 0.85;
   var SEED = 20250901;
+
+  /* TUNING ----------------------------------------------------------------
+   * The artboard's 70 grains are scaled for a ~1500px viewport. Dropped onto
+   * a 375px phone that same count reads as clutter (roughly 4x the grains per
+   * horizontal pixel) and costs 140 image layers of work every scroll frame.
+   * So count and size both scale down with the viewport, on the breakpoints
+   * the stylesheet already uses. Above 900px nothing changes.
+   */
+  var TABLET_MAX = 900;
+  var PHONE_MAX = 520;
+
+  function grainCountFor(w) {
+    if (w > TABLET_MAX) return 70; // desktop — the design's own value
+    if (w > PHONE_MAX) return 42;
+    return 22;
+  }
+
+  function grainScaleFor(w) {
+    if (w > TABLET_MAX) return 1; // desktop — the design's own sizing
+    if (w > PHONE_MAX) return 0.85;
+    return 0.7;
+  }
 
   // Seeded PRNG so the scatter is identical on every load.
   function mulberry(a) {
@@ -43,12 +66,23 @@
   var frozen = false;
   var raf = 0;
 
-  function buildGrains() {
+  // Cached viewport. On phones the address bar collapsing fires resize with a
+  // changed height and an unchanged width; recomputing from that would shift
+  // every grain mid-scroll, so the cache is only refreshed when the width
+  // actually moves. See onResize.
+  var vw = 0;
+  var vh = 0;
+  var lastW = -1;
+
+  function buildGrains(count, scale) {
     var rnd = mulberry(SEED);
     var out = [];
-    for (var i = 0; i < GRAIN_COUNT; i++) {
+    for (var i = 0; i < count; i++) {
+      // The rnd() call order below is load-bearing: it is what makes the
+      // desktop scatter identical to the artboard. Scale is applied to the
+      // result, never to the draw order.
       var v = Math.floor(rnd() * VARIANTS.length);
-      var h = 14 + rnd() * 34;
+      var h = (14 + rnd() * 34) * scale;
       out.push({
         i: i,
         paddy: VARIANTS[v].paddy,
@@ -58,7 +92,7 @@
         x: rnd(),
         phase: rnd(),
         speed: 0.45 + rnd() * 0.6,
-        sway: 8 + rnd() * 26,
+        sway: (8 + rnd() * 26) * scale,
         rot: -40 + rnd() * 80,
         spin: (rnd() < 0.5 ? -1 : 1) * (20 + rnd() * 50),
       });
@@ -66,23 +100,26 @@
     return out;
   }
 
-  function createLayer() {
-    grains = buildGrains();
-    layer = document.createElement('div');
-    layer.className = 'grain-layer';
-    layer.setAttribute('aria-hidden', 'true');
-
+  function populate() {
+    grains = buildGrains(grainCountFor(vw), grainScaleFor(vw));
     var html = '';
     for (var k = 0; k < grains.length; k++) {
       html +=
         '<div class="grain">' +
-          '<img alt="" />' +
-          '<img alt="" class="grain-rice" />' +
+          '<img alt="" decoding="async" draggable="false" />' +
+          '<img alt="" class="grain-rice" decoding="async" draggable="false" />' +
           '<div class="grain-husk"></div>' +
         '</div>';
     }
     layer.innerHTML = html;
     nodes = [].slice.call(layer.children);
+  }
+
+  function createLayer() {
+    layer = document.createElement('div');
+    layer.className = 'grain-layer';
+    layer.setAttribute('aria-hidden', 'true');
+    populate();
     document.body.appendChild(layer);
   }
 
@@ -96,8 +133,6 @@
     if (!layer) return;
     if (!active) { hide(); return; }
 
-    var vh = window.innerHeight;
-    var vw = window.innerWidth;
     var sy = frozen ? 0 : window.scrollY;
 
     // Grains live in the upper half of the page: full strength through the
@@ -169,6 +204,26 @@
     raf = requestAnimationFrame(function () { raf = 0; tick(); });
   }
 
+  function onResize() {
+    var w = window.innerWidth;
+
+    // Height-only resize on a phone is the address bar, not a real viewport
+    // change — ignore it so the grains hold their positions.
+    if (w === lastW && w <= TABLET_MAX) { onScroll(); return; }
+
+    lastW = w;
+    vw = w;
+    vh = window.innerHeight;
+
+    // Crossing a breakpoint changes how many grains belong on screen.
+    if (grainCountFor(vw) !== grains.length) {
+      populate();
+      refresh();
+      return;
+    }
+    onScroll();
+  }
+
   // Called after every re-render: the page markup is rebuilt, so the elements
   // the fade is keyed to have to be looked up again.
   function refresh() {
@@ -180,9 +235,13 @@
 
   function init() {
     frozen = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    vw = window.innerWidth;
+    vh = window.innerHeight;
+    lastW = vw;
     createLayer();
     window.addEventListener('scroll', onScroll, { passive: true });
-    window.addEventListener('resize', onScroll);
+    window.addEventListener('resize', onResize);
+    window.addEventListener('orientationchange', onResize);
     refresh();
   }
 

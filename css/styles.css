@@ -89,6 +89,16 @@ button { font-family: inherit; }
   .grain { transition: none !important; }
 }
 
+/* Mobile: each filtered grain forces its own compositing pass, and the 10%
+   brightness lift is imperceptible at phone scale — drop it and promote only
+   the transform. Desktop keeps the design's filter untouched. */
+@media (max-width: 900px) {
+  .grain {
+    filter: none;
+    will-change: transform;
+  }
+}
+
 /* ===== NAV ===== */
 .navbar {
   position: sticky;
